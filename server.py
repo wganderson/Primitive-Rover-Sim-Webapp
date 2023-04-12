@@ -7,12 +7,24 @@ from time import sleep, perf_counter
 from hashlib import sha256
 from pydantic import BaseModel
 from fastapi import FastAPI, HTTPException, Response
+from fastapi.middleware.cors import CORSMiddleware
+
 import shutil
 
 import logging
 import grpc
 
 app = FastAPI()
+
+origins = ["http://localhost:3000", "http://localhost:8000"]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 #Objects for serving
 class RoverModel(BaseModel):
@@ -23,6 +35,7 @@ class RoverModel(BaseModel):
     commands: str
 
 rovers_list = {}
+rover_counter = 1
 
 class MineModel(BaseModel):
     id: int
@@ -32,6 +45,7 @@ class MineModel(BaseModel):
     ypos: int
 
 mines_list = {}
+mine_counter = 1
 
 class Map(BaseModel):
     rows: int
@@ -60,7 +74,8 @@ def getRover(rover_id: int):
 # should be returned in the response upon successful
 # creation
 @app.post('/rovers')
-def postRover(rover_id: int, commands: str):
+def postRover(commands: str):
+    global rover_counter
     class RoverModel():
         id: int
         status: str
@@ -68,17 +83,15 @@ def postRover(rover_id: int, commands: str):
         ypos: int
         commands: str
 
-    if rover_id in rovers_list:
-        return {"error": "Rover with given ID already exists"}
-    
     new_rover = RoverModel()
-    new_rover.id = rover_id
+    new_rover.id = rover_counter
+    rover_counter += 1
     new_rover.status = "Not Started"
     new_rover.xpos = 0
     new_rover.ypos = 0
     new_rover.commands = commands
-    rovers_list[rover_id] = new_rover
-    return {"message": f"Rover {rover_id} created"}
+    rovers_list[new_rover.id] = new_rover
+    return {"message": f"Rover {new_rover.id} created"}
 
 #DELETE To delete a rover with the “:id”
 @app.delete('/rovers/{rover_id}')
@@ -96,7 +109,7 @@ def deleteRover(rover_id: int):
 def putRoverCommand(rover_id: int, commands: str):
     if rover_id not in rovers_list:
         raise HTTPException(status_code=404, detail="Rover not found")
-    elif rovers_list[rover_id].status == "Not Started" or rovers_list[rover_id].status == "Finished":
+    elif rovers_list[rover_id].status != "Not Started" and rovers_list[rover_id].status != "Finished":
         raise HTTPException(status_code=405, detail="Rover may not accept commands right now")
 
     rovers_list[rover_id].commands = commands
@@ -140,7 +153,8 @@ def deleteMine(mine_id: int):
         raise HTTPException(status_code=404, detail="Mine not found")
     
     del mines_list[mine_id]
-
+    
+    writeMap()
     return {"message": f"Mine {mine_id} has been successfully deleted"}
 
 #POST To create a mine. The coordinates (X and Y), along with the
@@ -148,7 +162,9 @@ def deleteMine(mine_id: int):
 # The ID of the mine should be returned in the response upon
 # successful creation
 @app.post('/mines')
-def createMine(mine_id: int, xpos: int, ypos: int, serial: str):
+def createMine(xpos: int, ypos: int, serial: str):
+    print("adding mine at:(", xpos, ", ", ypos, ")" )
+    global mine_counter
     class Mine():
         id: int
         status: str
@@ -160,19 +176,17 @@ def createMine(mine_id: int, xpos: int, ypos: int, serial: str):
         if mines_list[i].xpos == xpos and mines_list[i].ypos == ypos:
             print("mine already there")
             return {"error": "A mine already exists in that position"}
-        if mines_list[i].id == mine_id:
-            print("mine id already there")
-            return {"error": "Mine with given ID already exists"}
-
         
     new_mine = Mine()
-    new_mine.id = mine_id
+    new_mine.id = mine_counter
+    mine_counter += 1
     new_mine.xpos = xpos
     new_mine.ypos = ypos
     new_mine.serial = serial
     new_mine.status = "Armed"
-    mines_list[mine_id] = new_mine
-    return {"message": f"Mine {mine_id} created successfully"}
+    mines_list[new_mine.id] = new_mine
+    writeMap()
+    return {"message": f"Mine {new_mine.id} created successfully"}
 
 #PUT To update a mine. The coordinates (X and Y), along with
 # the serial number should be optional in the body of the
@@ -196,6 +210,7 @@ def putMineData(mine_id: int, xpos: int, ypos: int, serial: str):
         mines_list[mine_id].ypos = ypos
     if len(serial) > 0:
         mines_list[mine_id].serial = serial
+    writeMap()
 
 #Map FastAPI functions
 
@@ -219,7 +234,6 @@ def getMap():
             mapArr[i] = fp.readline().split()
 
         new_map.content = mapArr
-
     return new_map
 
 #write the current mines to the map file
@@ -232,14 +246,17 @@ def writeMap():
         fp.write(str(rows) + " " + str(cols) + "\n")
         for i in range(rows):
             for j in range(cols):
+                flag = False
                 for k in mines_list:
                     if mines_list[k].xpos == j and mines_list[k].ypos == i:
                         print("HIT!")
                         fp.write(str(mines_list[k].id))
                         fp.write(" ")
-                    else:
-                        fp.write("0")
-                        fp.write(" ")
+                        flag = True
+                if not flag:
+                    fp.write("0")
+                    fp.write(" ")
+
             fp.write("\n")
 
 #reset map to original default
@@ -247,17 +264,20 @@ def resetMap():
     source = "original.txt"
     dest = "map.txt"
     shutil.copyfile(source, dest)
+resetMap() # run
 
 #PUT To update the height and width of the field
 @app.put('/map')
 def putMap(cols: int, rows: int):
-    mapArr = [[0]*cols]*rows
+    mapArr = [[0]*rows]*cols
 
     with open("map.txt", "w") as f:
         f.write(f"{rows} {cols}\n")
 
         for row in mapArr:
+            print()
             f.write(" ".join(str(x) for x in row) + "\n")
+    writeMap()
     return {"Message": "Map updated"}
 
 
@@ -364,13 +384,13 @@ def pathFind(rover):
 
 def testMineCreateEdit():
     resetMap()
-    createMine(1, 5, 6, "abcdevtxkw")
-    putMineData(1, 7, 7, "")
+    createMine(5, 6, "abcdevtxkw")
     writeMap()
 
 def testRoverCreateDispatch():
     postRover(1, "MMMMRMLRRRLRMLMRMLMMMLMMRMMLDMLMMMMMLRLLRDMMMLDMLRDMRLMRMRMRRMLRLLRMDRMRDLMDLM")
     postDispatchRover(1)
 
-testMineCreateEdit()
-testRoverCreateDispatch()
+if __name__ == "__main__":
+    testMineCreateEdit()
+    testRoverCreateDispatch()
