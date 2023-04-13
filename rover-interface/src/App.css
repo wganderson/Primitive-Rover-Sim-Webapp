@@ -40,7 +40,7 @@
 /* Split the screen in half */
 .split {
   height: 100%;
-  width: 70%;
+  width: 60%;
   position: fixed;
   z-index: 1;
   top: 0;
@@ -71,7 +71,11 @@
 /* If you want the content centered horizontally and vertically */
 .centeredleft {
   position: absolute;
-  left: 20%;
+  left: 30%;
   transform: translate(-50%);
   text-align: left;
+}
+
+#just-line-break {
+  white-space: pre-line;
 }

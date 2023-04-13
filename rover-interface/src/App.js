@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import MapSelector from './MapSelector';
 import RoverMenu from './RoverMenu';
 import MineMenu from './MineMenu';
+import PrintPath from './PrintPath';
 
 function App() {
   return (
@@ -11,6 +12,7 @@ function App() {
         <div className = "centeredleft">
           <RoverMenu/>
           <MineMenu/>
+          <PrintPath/>
         </div>
       </div>
       <div className="split right">

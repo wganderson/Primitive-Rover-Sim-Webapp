@@ -15,7 +15,7 @@ function MapSelector() {
                 return
             }
             const minejson = { "xpos": xpos, "ypos": ypos, "serial": serial }
-            fetch('http://localhost:8000/mines?' + new URLSearchParams(minejson),
+            fetch('/mines?' + new URLSearchParams(minejson),
                 {
                     method: 'POST',
                     mode: 'cors'
@@ -29,7 +29,7 @@ function MapSelector() {
     const handleDeleteEvent = function (mine_id) {
         return function () {
             const minejson = { "mine_id": mine_id }
-            fetch('http://localhost:8000/mines/' + String(mine_id) + '?' + new URLSearchParams(minejson),
+            fetch('/mines/' + String(mine_id),
                 {
                     method: 'Delete',
                     mode: 'cors'
@@ -50,7 +50,7 @@ function MapSelector() {
                 rows += diff
             }
             const mapjson = { "rows": rows, "cols": cols }
-            fetch('http://localhost:8000/map?' + new URLSearchParams(mapjson),
+            fetch('/map?' + new URLSearchParams(mapjson),
                 {
                     method: 'PUT',
                     mode: 'cors'
@@ -67,7 +67,7 @@ function MapSelector() {
                 cols += diff
             }
             const mapjson = { "rows": rows, "cols": cols }
-            fetch('http://localhost:8000/map?' + new URLSearchParams(mapjson),
+            fetch('/map?' + new URLSearchParams(mapjson),
                 {
                     method: 'PUT',
                     mode: 'cors'
@@ -80,7 +80,7 @@ function MapSelector() {
 
 
     const getMap = async function () {
-        let resp = await fetch('http://localhost:8000/map',
+        let resp = await fetch('/map',
             {
                 method: 'GET',
                 mode: 'cors'

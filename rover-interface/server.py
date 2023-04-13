@@ -1,5 +1,6 @@
 import requests
 import json
+import os
 import numpy as np
 import threading
 from threading import Thread
@@ -8,13 +9,15 @@ from hashlib import sha256
 from pydantic import BaseModel
 from fastapi import FastAPI, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from starlette.responses import FileResponse 
+
 
 import shutil
 
-import logging
-import grpc
-
 app = FastAPI()
+
+
 
 origins = ["http://localhost:3000", "http://localhost:8000"]
 
@@ -52,6 +55,11 @@ class Map(BaseModel):
     cols: int
     content: str
 
+# server index.html as default page
+@app.get("/")
+async def read_index():
+    return FileResponse('build/index.html')
+
 #Rover FastAPI functions
 
 #GET To retrieve the list of all rovers
@@ -68,6 +76,20 @@ def getRover(rover_id: int):
     if rover_id not in rovers_list:
         raise HTTPException(status_code=404, detail="Rover not found")
     return rovers_list[rover_id]
+
+#GET To retrieve the map for the given rover id
+@app.get('/rovers/{rover_id}/path')
+def getRover(rover_id: int):
+    if rover_id not in rovers_list:
+        raise HTTPException(status_code=404, detail="Rover not found")
+    
+    file = "path_" + str(rover_id) + ".txt"
+    if os.path.exists(file):
+        fp = open(file, "r")
+    else:
+        raise HTTPException(status_code=405, detail="Rover path not generated")
+    
+    return fp.read()
 
 #POST To create a rover. The list of commands as a String should
 # be required in the body of the request. The ID of the rover
@@ -333,9 +355,11 @@ def dig(id):
             print("------------------------")
             print("leading: " + str(leading))
             print("pin: " + pinstr)
-            break
+            return True
         else:
             count += 1
+    return False
+    
 
 
 def pathFind(rover):
@@ -357,6 +381,8 @@ def pathFind(rover):
     for i in range(len(command)):
         defuseflag = 0
         digSpotID = int(mapArr[mars.position[1]][mars.position[0]])
+        rovers_list[rover.id].xpos = mars.position[0]
+        rovers_list[rover.id].ypos = mars.position[1]
         if command[i] == "M":
             mars.forward()
             pathArr[mars.position[1], mars.position[0]] = "*"
@@ -367,16 +393,22 @@ def pathFind(rover):
         elif command[i] == "D":
             if digSpotID != 0:
                 print("digging mine... ")
-                dig(digSpotID)
-                defuseflag = 1
+                if dig(digSpotID):
+                    print("Successful defuse")
+                    mines_list[digSpotID].status = "Defused"
+                    defuseflag = 1
             else:
                 print("no mine to dig")
         if (i < len(command) - 1):
             if command[i + 1] == "M" and digSpotID != 0 and defuseflag == 0:
                 print("EXPLOSION!")
+                pathArr[mars.position[1], mars.position[0]] = "0"
+                rovers_list[rover.id].status = "Exploded"
+                mines_list[digSpotID].status = "Exploded"
                 break
         else:
             print("success")
+            rovers_list[rover.id].status = "Finished"
 
     fp = open("path_" + str(rover.id) + ".txt", "w+")
     for i in range(rows):
@@ -390,6 +422,8 @@ def testMineCreateEdit():
 def testRoverCreateDispatch():
     postRover(1, "MMMMRMLRRRLRMLMRMLMMMLMMRMMLDMLMMMMMLRLLRDMMMLDMLRDMRLMRMRMRRMLRLLRMDRMRDLMDLM")
     postDispatchRover(1)
+
+app.mount("/", StaticFiles(directory="build"), name="static")
 
 if __name__ == "__main__":
     testMineCreateEdit()

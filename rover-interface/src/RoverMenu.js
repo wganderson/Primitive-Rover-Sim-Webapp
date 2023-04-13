@@ -11,8 +11,7 @@ function RoverMenu() {
                 return
             }
             const roverjson = {"commands": commands }
-            console.log(commands)
-            fetch('http://localhost:8000/rovers?' + new URLSearchParams(roverjson),
+            fetch('/rovers?' + new URLSearchParams(roverjson),
             {
                 method: 'POST',
                 mode: 'cors'
@@ -26,7 +25,7 @@ function RoverMenu() {
     const handleDeleteButton = function (id) {
         return function () {
             const idjson = {"rover_id": id}
-            fetch('http://localhost:8000/rovers/' + id + '?' + new URLSearchParams(idjson),
+            fetch('/rovers/' + id + '?' + new URLSearchParams(idjson),
             {
                 method: 'DELETE',
                 mode: 'cors'
@@ -40,7 +39,7 @@ function RoverMenu() {
     const handleDispatchButton = function (id) {
         return function () {
             const idjson = {"rover_id": id}
-            fetch('http://localhost:8000/rovers/' + id + '/dispatch?' + new URLSearchParams(idjson),
+            fetch('/rovers/' + id + '/dispatch?' + new URLSearchParams(idjson),
             {
                 method: 'POST',
                 mode: 'cors'
@@ -58,8 +57,7 @@ function RoverMenu() {
                 return
             }
             const roverjson = {"rover_id": id, "commands": commands }
-            console.log(commands)
-            fetch('http://localhost:8000/rovers/' + id + '?' + new URLSearchParams(roverjson),
+            fetch('/rovers/' + id + '?' + new URLSearchParams(roverjson),
             {
                 method: 'PUT',
                 mode: 'cors'
@@ -71,7 +69,7 @@ function RoverMenu() {
     }
 
     const getRovers = async function () {
-        let resp = await fetch('http://localhost:8000/rovers',
+        let resp = await fetch('/rovers',
             {
                 method: 'GET',
                 mode: 'cors'
@@ -90,11 +88,11 @@ function RoverMenu() {
     let roverFormat = [];
     for(let i = 0; i < Object.keys(roverData).length; i++) {
         let rover = roverData[i];
-        console.log(rover)
         roverFormat.push(
             <div key = {i}>
                 <b>|Rover {rover.id}|</b>
-                Status: {rover.status} 
+                {rover.status}
+                <b>|</b>({rover.xpos}, {rover.ypos})<b>|</b>
                 &nbsp;&nbsp;
                 <button onClick = {handleDispatchButton(rover.id)}>Dispatch</button>
                 <button onClick = {handleMofifyButton(rover.id)}>Modify</button>
