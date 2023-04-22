@@ -5,6 +5,8 @@ export const mapContext = createContext("");
 function MapSelector() {
     const [mapData, setMapData] = useState(null)
     const [mode, setMode] = useState("")
+    //let url = ""; //for deployment
+    let url = "http://localhost:8000";
 
     let map = [];
 
@@ -15,7 +17,7 @@ function MapSelector() {
                 return
             }
             const minejson = { "xpos": xpos, "ypos": ypos, "serial": serial }
-            fetch('/mines?' + new URLSearchParams(minejson),
+            fetch(url + '/mines?' + new URLSearchParams(minejson),
                 {
                     method: 'POST',
                     mode: 'cors'
@@ -29,7 +31,7 @@ function MapSelector() {
     const handleDeleteEvent = function (mine_id) {
         return function () {
             const minejson = { "mine_id": mine_id }
-            fetch('/mines/' + String(mine_id),
+            fetch(url + '/mines/' + String(mine_id),
                 {
                     method: 'Delete',
                     mode: 'cors'
@@ -50,7 +52,7 @@ function MapSelector() {
                 rows += diff
             }
             const mapjson = { "rows": rows, "cols": cols }
-            fetch('/map?' + new URLSearchParams(mapjson),
+            fetch(url + '/map?' + new URLSearchParams(mapjson),
                 {
                     method: 'PUT',
                     mode: 'cors'
@@ -67,7 +69,7 @@ function MapSelector() {
                 cols += diff
             }
             const mapjson = { "rows": rows, "cols": cols }
-            fetch('/map?' + new URLSearchParams(mapjson),
+            fetch(url + '/map?' + new URLSearchParams(mapjson),
                 {
                     method: 'PUT',
                     mode: 'cors'
@@ -80,7 +82,7 @@ function MapSelector() {
 
 
     const getMap = async function () {
-        let resp = await fetch('/map',
+        let resp = await fetch(url + '/map',
             {
                 method: 'GET',
                 mode: 'cors'

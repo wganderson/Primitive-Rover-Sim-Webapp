@@ -4,6 +4,9 @@ function PrintPath() {
     const [path, setPath] = useState("")
     const [rover_id, setRoverID] = useState(0)
 
+    //let url = ""; //for deployment
+    let url = "http://localhost:8000";
+    
     const handleSubmit = async function () {
         let resp = await fetch('/rovers/' + String(rover_id) + '/path',
             {

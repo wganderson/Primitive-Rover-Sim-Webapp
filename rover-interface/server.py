@@ -3,6 +3,7 @@ import json
 import os
 import numpy as np
 import threading
+import uvicorn
 from threading import Thread
 from time import sleep, perf_counter
 from hashlib import sha256
@@ -420,11 +421,13 @@ def testMineCreateEdit():
     writeMap()
 
 def testRoverCreateDispatch():
-    postRover(1, "MMMMRMLRRRLRMLMRMLMMMLMMRMMLDMLMMMMMLRLLRDMMMLDMLRDMRLMRMRMRRMLRLLRMDRMRDLMDLM")
+    postRover("MMMMRMLRRRLRMLMRMLMMMLMMRMMLDMLMMMMMLRLLRDMMMLDMLRDMRLMRMRMRRMLRLLRMDRMRDLMDLM")
     postDispatchRover(1)
 
-app.mount("/", StaticFiles(directory="build"), name="static")
+#comment to run script in __main__
+#app.mount("/", StaticFiles(directory="build"), name="static")
 
 if __name__ == "__main__":
     testMineCreateEdit()
     testRoverCreateDispatch()
+    uvicorn.run(app, host="localhost", port=8000)

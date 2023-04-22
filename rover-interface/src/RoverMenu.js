@@ -2,16 +2,20 @@ import React, { useState } from 'react';
 
 function RoverMenu() {
     const [roverData, setRoverData] = useState(null)
-
+    //let url = ""; //for deployment
+    let url = "http://localhost:8000";
+    
     let rovers = []
     const handleCreateButton = function () {
+
+
         return function () {
             let commands = prompt("Enter Command List", "");
             if (commands == null) {
                 return
             }
             const roverjson = {"commands": commands }
-            fetch('/rovers?' + new URLSearchParams(roverjson),
+            fetch(url + '/rovers?' + new URLSearchParams(roverjson),
             {
                 method: 'POST',
                 mode: 'cors'
@@ -25,7 +29,7 @@ function RoverMenu() {
     const handleDeleteButton = function (id) {
         return function () {
             const idjson = {"rover_id": id}
-            fetch('/rovers/' + id + '?' + new URLSearchParams(idjson),
+            fetch(url + '/rovers/' + id + '?' + new URLSearchParams(idjson),
             {
                 method: 'DELETE',
                 mode: 'cors'
@@ -39,7 +43,7 @@ function RoverMenu() {
     const handleDispatchButton = function (id) {
         return function () {
             const idjson = {"rover_id": id}
-            fetch('/rovers/' + id + '/dispatch?' + new URLSearchParams(idjson),
+            fetch(url + '/rovers/' + id + '/dispatch?' + new URLSearchParams(idjson),
             {
                 method: 'POST',
                 mode: 'cors'
@@ -57,7 +61,7 @@ function RoverMenu() {
                 return
             }
             const roverjson = {"rover_id": id, "commands": commands }
-            fetch('/rovers/' + id + '?' + new URLSearchParams(roverjson),
+            fetch(url + '/rovers/' + id + '?' + new URLSearchParams(roverjson),
             {
                 method: 'PUT',
                 mode: 'cors'
@@ -69,7 +73,7 @@ function RoverMenu() {
     }
 
     const getRovers = async function () {
-        let resp = await fetch('/rovers',
+        let resp = await fetch(url + '/rovers',
             {
                 method: 'GET',
                 mode: 'cors'

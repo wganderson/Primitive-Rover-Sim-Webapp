@@ -8,6 +8,9 @@ function MineMenu() {
     const [y_pos, setY] = useState(0)
     const [serial, setSerial] = useState("")
 
+    //let url = ""; //for deployment
+    let url = "http://localhost:8000";
+    
     const getMap = async function () {
         let resp = await fetch('/map',
             {
@@ -21,7 +24,7 @@ function MineMenu() {
 
     const handleSubmit = function () {
         const minejson = { "mine_id": mine_id, "xpos": x_pos, "ypos": y_pos, "serial": serial }
-        fetch('/mines/' + String(mine_id) + '?' + new URLSearchParams(minejson),
+        fetch(url + '/mines/' + String(mine_id) + '?' + new URLSearchParams(minejson),
             {
                 method: 'PUT',
                 mode: 'cors'
