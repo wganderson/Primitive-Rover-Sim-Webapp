@@ -7,3 +7,5 @@ The front end is intended for desktop use and does not support a wide range of a
 ![image](https://github.com/wganderson/Primitive-Rover-Sim-Webapp/assets/114177995/fee0ff69-c28c-4301-8afd-8a3fb7198ccc)
 
 ![image](https://github.com/wganderson/Primitive-Rover-Sim-Webapp/assets/114177995/a0574e1e-1be8-44fd-9592-517673101fcd)
+
+This is the dockerized version of the code, if you want to run it locally on your machine, check the local-deploy branch
